@@ -1,0 +1,44 @@
+require "ruby-audio"
+
+SNIP_LENGTH = 15
+def create_snippet(file)
+
+  sndorig_comp = file
+  sndorig_extn = File.extname sndorig_comp
+  # grab the base filename for later
+  sndorig_name = File.basename sndorig_comp, sndorig_extn
+
+  RubyAudio::Sound.open(sndorig_comp) do |snd|
+    info = snd.info
+    sndlen = info.length
+    samplerate = info.samplerate
+    puts info
+    puts sndlen
+    puts samplerate
+    # grab a random starting point in the file
+    snip_time_begin = 15
+
+    # create a buffer as big as the snippet
+    bytes_to_read = (info.samplerate * SNIP_LENGTH).to_i
+    #                             type,
+    buf = RubyAudio::Buffer.new("float", bytes_to_read, info.channels)
+    x = [1,2,3,4]
+    for i in x do
+      puts (info.samplerate * snip_time_begin)
+      # seek to where the snippet begins and grab the audio
+      snd.seek(info.samplerate * snip_time_begin)
+      snd.read(buf, bytes_to_read)
+
+      # create new file's name from original
+      sndsnip_name = sndorig_name + "_snippet.wav"
+
+      # write the new snippet to a file
+      out = RubyAudio::Sound.open(sndsnip_name, "w", info.clone)
+      out.write(buf)
+      snip_time_begin = snip_time_begin + 15
+
+    end
+    puts "#{sndsnip_name} created." if out
+  end
+end
+create_snippet("You.wav")
