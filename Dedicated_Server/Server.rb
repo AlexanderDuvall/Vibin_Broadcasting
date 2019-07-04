@@ -70,10 +70,12 @@ class Server
   end
 
   def exists_key?(user)
-    puts "#{user.strip!}, #{user.class}"
-    puts "#{@connections[user]}"
+    puts "#{user.strip!}, #{user.class}------------1"
+    puts "#{@connections[user]}-------------2"
+    puts @connections
+    puts "vs #{user.gsub(" ", "")}"
     if (!@connections.nil?)
-      @connections.key?(user) ? true : false
+      @connections.key?(user.gsub(" ", "")) || @connections.key(user) || @connections.key(user.strip!) ? true : false
     end
   end
 end

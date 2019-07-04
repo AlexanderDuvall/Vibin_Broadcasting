@@ -8,10 +8,12 @@ class Server
     @port = port
     @server = TCPServer.new ip_v4, port
     @client = nil
+    ip = Socket.ip_address_list.detect {|intf| intf.ipv4_private?}
+    @ip = ip.ip_address
   end
 
   def run
-     loop do
+    loop do
       puts 'waiting....'
       @client = @server.accept
       request = @client.readpartial(2048)
@@ -29,7 +31,7 @@ class Server
                    "Content-Length: #{resp.length}", "Machine-Reached-Status:#{resp}"].join("\r\n")
         @client.print headers
         @client.close
-        @socket = TCPSocket.open('192.168.1.91', 4445)
+        @socket = TCPSocket.open(@ip, 4445)
         send_id(request_info["User_id"])
         loop do
           puts "waiting for next byte..."
