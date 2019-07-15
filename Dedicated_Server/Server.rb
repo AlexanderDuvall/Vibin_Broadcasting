@@ -16,21 +16,34 @@ class Server
           @connections[lines["Broadcaster"]] = Hash.new
           Thread.start(client) do |client|
             current_user = lines["Broadcaster"].freeze
-            puts "Current User: #{current_user}-----------"
-            loop do
-              puts 'Waiting on new data---------'
-              song_info = client.readpartial(2048)
-              song_info = receive song_info
-              if (!song_info.nil?)
-                if (song_info.key?("Song_id") && song_info.key?("Duration") && !song_info["Duration"].nil? && !song_info["Song_id"].nil?)
-                  @connections[current_user] = ["Song_id" => song_info["Song_id"], "Duration" => song_info["Duration"]]
-                  puts @connections[current_user]
+            begin
+              puts "Current User: #{current_user}-----------"
+              loop do
+                puts 'Waiting on new data---------'
+                song_info = client.readpartial(2048)
+                song_info = receive song_info
+                if (!song_info.nil?)
+                  if (song_info.key?("Song_id") && song_info.key?("Duration") && !song_info["Duration"].nil? && !song_info["Song_id"].nil?)
+                    @connections[current_user] = ["Song_id" => song_info["Song_id"], "Duration" => song_info["Duration"]]
+                    puts @connections[current_user]
+                  elsif (song_info.key?("Action") && !song_info["Action"].nil?)
+                    @connections[current_user] = ["Song_id" => -1, "Duration" => song_info["Action"]]
+                    #@connections.delete(current_user)
+                    puts "sayonara"
+                  else
+                    puts "Bad Song Data"
+                  end
                 else
-                  puts "Bad Song Data"
+                  puts "No Song Data"
                 end
-              else
-                puts "No Song Data"
               end
+            rescue ECONNRESET => e
+              e.message
+            ensure
+              @connections[current_user] = ["Song_id" => -1, "Duration" => -1]
+              puts"--------------ensure--------------"
+              puts @connections[current_user]
+
             end
           end
         else

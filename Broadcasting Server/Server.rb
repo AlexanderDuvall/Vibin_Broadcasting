@@ -3,6 +3,29 @@ require 'socket'
 class Server
   @server = nil
 
+  def sever_connection
+    puts "starting thread..."
+    loop do
+      puts "looping"
+      sleep(3)
+      if Thread.current.thread_variable? :time
+        puts "comparing"
+        past_time = Thread.current.thread_variable_get :time
+        current_time = Time.now.to_f.round
+        if (current_time - past_time > 5)
+          @socket.close
+          puts "severing conn.."
+          break;
+        else
+          puts "still good..."
+        end
+      else
+        puts "Var not set"
+      end
+    end
+    puts "fin"
+  end
+
   def initialize (ip_v4, port)
     @ip_v4 = ip_v4
     @port = port
@@ -18,7 +41,6 @@ class Server
       @client = @server.accept
       request = @client.readpartial(2048)
       # puts request
-
       request_info = parse(request.to_s)
       if (request_info.key?("User_id"))
         resp = "True"
@@ -33,15 +55,24 @@ class Server
         @client.close
         @socket = TCPSocket.open(@ip, 4445)
         send_id(request_info["User_id"])
+        sever = Thread.new do |f|
+          sever_connection
+        end
         loop do
           puts "waiting for next byte..."
           client = @server.accept
+          sever.alive? ? sever.thread_variable_set(:time, Time.now.to_f.round) : break
           info = client.readpartial(2048)
-          # puts info
           parsed_info = receive info
           client.close
-          send_off parsed_info["Duration"], parsed_info["Song_id"]
+          if (parsed_info.key?("Action"))
+            send_off parsed_info["Action"], nil
+          else
+            send_off parsed_info["Duration"], parsed_info["Song_id"]
+
+          end
         end
+        sever.join
       else
         @client.close
         puts "reality is often disappointing"
@@ -61,8 +92,13 @@ class Server
 
   def send_off(duration, song_id)
     if @socket
-      @socket.puts "Duration:#{duration} \nSong_id:#{song_id}"
-      puts "sent off"
+      if (song_id.nil?)
+        @socket.puts "Action:#{duration} \n"
+        puts "sent off"
+      else
+        @socket.puts "Duration:#{duration} \nSong_id:#{song_id}"
+        puts "sent off"
+      end
     else
       puts "socket is nil"
     end
@@ -76,9 +112,12 @@ class Server
       contents = line.split(":")
       info[contents[0]] = contents[1]
     end
-    unless !info["Duration"] || !info["Song_id"]
+    if info["Duration"] || info["Song_id"]
       puts "Current Song Duration: #{info["Duration"]}"
       puts "Current Song Id: #{info["Song_id"]}"
+      return info
+    elsif info["Action"]
+      puts "Current Action #{info["Action"]}"
       return info
     else
       puts "one is null"

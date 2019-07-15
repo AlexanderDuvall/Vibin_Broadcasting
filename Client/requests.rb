@@ -26,7 +26,10 @@ class Requests
                 client.puts build_header @song.to_s, @duration.to_s
                 puts "SENT BACK THE DATA."
               else
-                puts "has no key"
+                data = dedicated_server.get_data(request["Broadcaster_id"])[0]
+                @song = -1
+                @duration = -1
+                client.puts build_header @song.to_s, @duration.to_s
               end
             else
               puts "bad key"
@@ -54,7 +57,6 @@ class Requests
                "Content-Length: #{length}", "Song_id:#{song}", "Duration:#{duration}"].join("\r\n")
     headers
   end
-
 
   def receive(lines)
 
