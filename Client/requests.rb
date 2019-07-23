@@ -1,8 +1,9 @@
 require 'socket'
 require_relative '../Broadcasting Server/Server'
 class Requests
-  def initialize(ip_v4, port, dedicated_server)
+  def initialize(ip_v4, port, dedicated_server, return_address)
     @song = nil
+    @return_address = return_address
     @duration = nil
     @server = TCPServer.new ip_v4, port
     loop do
@@ -50,7 +51,7 @@ class Requests
     length = song + duration
     length = length.length
     headers = ["HTTP/1.1 200 OK",
-               "Access-Control-Allow-Origin:http://localhost:3000\r\n",
+               "Access-Control-Allow-Origin:http://#{@return_address}:3000\r\n",
                "Date: Tue, 14 Dec 2010 10:48:45 GMT",
                "Server: Ruby",
                "Content-Type: text/html; charset=iso-8859-1",

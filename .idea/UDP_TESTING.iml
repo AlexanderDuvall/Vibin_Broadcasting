@@ -8,5 +8,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="json (v2.2.0, ruby-2.5.3-p105) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="mysql2 (v0.5.2, ruby-2.5.3-p105) [gem]" level="application" />
   </component>
 </module>

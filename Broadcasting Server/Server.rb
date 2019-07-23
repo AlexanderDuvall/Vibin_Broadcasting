@@ -26,13 +26,10 @@ class Server
     puts "fin"
   end
 
-  def initialize (ip_v4, port)
-    @ip_v4 = ip_v4
-    @port = port
-    @server = TCPServer.new ip_v4, port
+  def initialize (remote_host,port)
+    @server = TCPServer.new "localhost", port
     @client = nil
-    ip = Socket.ip_address_list.detect {|intf| intf.ipv4_private?}
-    @ip = ip.ip_address
+    @ip = remote_host
   end
 
   def run
@@ -69,7 +66,6 @@ class Server
             send_off parsed_info["Action"], nil
           else
             send_off parsed_info["Duration"], parsed_info["Song_id"]
-
           end
         end
         sever.join

@@ -1,8 +1,13 @@
 require 'socket'
+require 'net/http'
+require 'uri'
+require 'json'
+require 'mysql2'
 class Server
-  def initialize(ip_v4, port)
+  def initialize(ip_v4, port, return_address)
     @server = TCPServer.new ip_v4, port
     @connections = Hash.new
+    @return_address = return_address
   end
 
   def run
@@ -28,8 +33,9 @@ class Server
                     puts @connections[current_user]
                   elsif (song_info.key?("Action") && !song_info["Action"].nil?)
                     @connections[current_user] = ["Song_id" => -1, "Duration" => song_info["Action"]]
-                    #@connections.delete(current_user)
+                    # @connections.delete(current_user)
                     puts "sayonara"
+                    break
                   else
                     puts "Bad Song Data"
                   end
@@ -41,8 +47,10 @@ class Server
               e.message
             ensure
               @connections[current_user] = ["Song_id" => -1, "Duration" => -1]
-              puts"--------------ensure--------------"
+              puts "--------------ensure--------------"
               puts @connections[current_user]
+              # @connections.delete(current_user) if @connections.key?(current_user)
+              broadcaster_off(current_user.to_s)
 
             end
           end
@@ -65,6 +73,22 @@ class Server
     return info
   end
 
+  def broadcaster_off(id)
+
+    begin
+      puts "UPDATING DB...."
+      con = Mysql2::Client.new(:host => "192.168.1.70", :username => "root", :password => "password", :database => "vibinmusic_beta_development", :port => "3306")
+      query = con.prepare("UPDATE Broadcasters SET is_playing = 0 WHERE Id = ?")
+      result = query.execute(id)
+      puts "result #{result}"
+    rescue Mysql2::Error => e
+      puts e.errno
+      puts e.error
+    ensure
+      con.close if con
+    end
+  end
+
   def reorderLines(lines) # remove empty lines
     new_lines = ""
     lines.each_line do |f| #
@@ -80,6 +104,10 @@ class Server
 
   def get_data(user)
     return @connections[user]
+  end
+
+  def get_users
+    return @connections.keys
   end
 
   def exists_key?(user)

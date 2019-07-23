@@ -1,8 +1,7 @@
 #Sends data to dedicated server
 puts "Broadcaster Streaming Started..."
 require_relative '../Broadcasting Server/Server'
-ip = Socket.ip_address_list.detect {|intf| intf.ipv4_private?}
-ip = ip.ip_address
+ip = "192.168.1.73"
 puts ip
-@server = Server.new(ip, '4444')
+@server = Server.new(ip,'4444')
 @server.run
